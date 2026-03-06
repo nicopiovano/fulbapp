@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { MATCH_TYPES } from '@/types'
 import { formatMatchDate } from '@/utils/formatDate'
+import { isMatchPast as checkMatchPast } from '@/utils/matchDate'
 import { formatPrice } from '@/utils/formatPrice'
 import DifficultyBadge from './DifficultyBadge.vue'
 import JoinMatchButton from './JoinMatchButton.vue'
@@ -39,6 +40,9 @@ const isNew = computed(() => {
 })
 const isCompetitive = computed(() => props.match.difficulty >= 8)
 const isAlmostFull = computed(() => max.value > 0 && count.value >= max.value - 2 && !isFull.value)
+const isMatchPast = computed(() =>
+  checkMatchPast(props.match?.date, props.match?.time)
+)
 const displayDate = computed(() => formatMatchDate(props.match.date, props.match.time))
 const displayPrice = computed(() => formatPrice(props.match.price))
 </script>
@@ -59,6 +63,9 @@ const displayPrice = computed(() => formatPrice(props.match.price))
       </span>
       <span v-if="isAlmostFull" class="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
         Casi lleno
+      </span>
+      <span v-if="isFull" class="rounded bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/40 dark:text-red-200">
+        Lleno
       </span>
     </div>
 
@@ -84,7 +91,7 @@ const displayPrice = computed(() => formatPrice(props.match.price))
       />
     </div>
 
-    <div class="mt-4 flex justify-end" @click.stop>
+    <div v-if="!isMatchPast" class="mt-4 flex justify-end" @click.stop>
       <JoinMatchButton
         :joined="isJoined"
         :full="isFull"

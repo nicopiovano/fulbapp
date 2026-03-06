@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="30" fill="#fff" stroke="#1e293b" stroke-width="2"/>
+  <!-- Pentágono central -->
+  <path d="M32 12 L40 24 L36 38 L28 38 L24 24 Z" fill="#1e293b"/>
+  <!-- 5 pentágonos alrededor (vista 2D balón) -->
+  <path d="M40 24 L54 28 L50 42 L36 38 L40 24 Z" fill="#1e293b"/>
+  <path d="M50 42 L46 54 L36 50 L36 38 L50 42 Z" fill="#1e293b"/>
+  <path d="M36 50 L24 54 L24 38 L36 38 L36 50 Z" fill="#1e293b"/>
+  <path d="M24 38 L24 24 L10 28 L14 42 L24 38 Z" fill="#1e293b"/>
+  <path d="M24 24 L40 24 L54 28 L48 14 L32 12 L24 24 Z" fill="#1e293b"/>
+</svg>

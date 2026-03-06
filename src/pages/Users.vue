@@ -59,8 +59,8 @@ onMounted(async () => {
 <template>
   <div class="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
     <AppNavbar />
-    <main class="mx-auto max-w-6xl px-4 py-6 flex-1">
-      <h1 class="mb-6 text-xl font-semibold text-slate-800 dark:text-slate-100">
+    <main class="mx-auto w-full max-w-6xl px-4 py-6 flex-1">
+      <h1 class="mb-4 text-xl font-semibold text-slate-800 dark:text-slate-100">
         Usuarios registrados
       </h1>
       <p class="mb-6 text-sm text-slate-600 dark:text-slate-400">
@@ -72,35 +72,33 @@ onMounted(async () => {
       </div>
       <div
         v-else
-        class="space-y-3 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
       >
         <article
           v-for="u in filteredUsers"
           :key="u.id"
-          class="flex items-center gap-4 rounded-card border border-slate-200 bg-white p-4 shadow-card transition-colors hover:border-primary-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-primary-500"
+          class="flex flex-col items-center rounded-card border border-slate-200 bg-white p-3 shadow-card transition-colors hover:border-primary-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-primary-500"
         >
           <button
             type="button"
-            class="flex flex-1 min-w-0 items-center gap-4 text-left"
+            class="flex flex-col items-center w-full text-center"
             @click="openProfile(u.id)"
           >
-            <PlayerAvatar :src="u.avatar" :name="u.name" size="lg" />
-            <div class="min-w-0 flex-1">
-              <p class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ u.name }}</p>
-              <p v-if="u.position" class="text-sm text-slate-500 dark:text-slate-400 capitalize">
-                {{ u.position }}
-              </p>
-              <RatingStars :value="getOverall(u)" :max="5" size="sm" show-value />
-            </div>
+            <PlayerAvatar :src="u.avatar" :name="u.name" size="md" class="mb-2" />
+            <p class="font-medium text-slate-800 dark:text-slate-100 text-sm truncate w-full">{{ u.name }}</p>
+            <p v-if="u.position" class="text-xs text-slate-500 dark:text-slate-400 capitalize truncate w-full">
+              {{ u.position }}
+            </p>
+            <RatingStars :value="getOverall(u)" :max="5" size="sm" show-value class="mt-1" />
           </button>
           <button
             type="button"
-            class="flex shrink-0 items-center gap-2 rounded-xl border border-primary-300 bg-primary-50 px-4 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100 dark:border-primary-600 dark:bg-primary-900/40 dark:text-primary-200 dark:hover:bg-primary-900/60"
+            class="mt-2 flex items-center justify-center gap-1 rounded-lg border border-primary-300 bg-primary-50 px-2 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100 dark:border-primary-600 dark:bg-primary-900/40 dark:text-primary-200 dark:hover:bg-primary-900/60 w-full"
             title="Contactar (próximamente)"
-            @click="contactUser(u.id)"
+            @click.stop="contactUser(u.id)"
           >
-            <MessageCircle class="h-4 w-4" />
-            <span class="hidden sm:inline">Contactar</span>
+            <MessageCircle class="h-3.5 w-3.5 shrink-0" />
+            Contactar
           </button>
         </article>
       </div>

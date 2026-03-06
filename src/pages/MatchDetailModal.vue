@@ -6,6 +6,7 @@ import { useMatchStore } from '@/stores/matchStore'
 import { useUIStore } from '@/stores/uiStore'
 import { MATCH_TYPES, RATING_CATEGORIES } from '@/types'
 import { formatMatchDate, formatMatchDateFull } from '@/utils/formatDate'
+import { isMatchPast as checkMatchPast } from '@/utils/matchDate'
 import { formatPrice } from '@/utils/formatPrice'
 import * as userService from '@/services/userService'
 import * as ratingService from '@/services/ratingService'
@@ -49,14 +50,9 @@ const isJoined = computed(() =>
   userId.value && match.value?.playerIds?.includes(userId.value)
 )
 
-const isMatchPast = computed(() => {
-  if (!match.value?.date || !match.value?.time) return false
-  const [y, m, d] = match.value.date.split('-').map(Number)
-  const [h, min] = match.value.time.split(':').map(Number)
-  const matchEnd = new Date(y, m - 1, d, h, min)
-  matchEnd.setHours(matchEnd.getHours() + 2)
-  return new Date() > matchEnd
-})
+const isMatchPast = computed(() =>
+  checkMatchPast(match.value?.date, match.value?.time)
+)
 
 const isCreator = computed(() =>
   userId.value && match.value?.createdBy === userId.value
@@ -259,9 +255,10 @@ function handleClose() {
 
       <div
         v-if="isMatchPast && isCreator && participantsToRate.length"
+        id="calificar-jugadores"
         class="space-y-4 rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/30"
       >
-        <h4 class="font-semibold text-slate-800 dark:text-slate-100">Valorar participantes</h4>
+        <h4 class="font-semibold text-slate-800 dark:text-slate-100">Calificar jugadores</h4>
         <p class="text-sm text-slate-600 dark:text-slate-300">
           El partido ya finalizó. Valorá a cada jugador para mejorar su reputación.
         </p>
@@ -330,6 +327,14 @@ function handleClose() {
           :loading="joinLoading"
           @click="handleLeave()"
         />
+      </div>
+      <div v-else-if="isMatchPast && isCreator && participantsToRate.length" class="flex gap-3 pt-2">
+        <a
+          href="#calificar-jugadores"
+          class="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 dark:bg-primary-500"
+        >
+          Calificar jugadores
+        </a>
       </div>
     </div>
   </BaseModal>
