@@ -53,15 +53,11 @@ export function formatMatchDate(date, time) {
     label = 'Hoy'
   } else if (isTomorrow(matchDate)) {
     label = 'Mañana'
-  } else if (isSameWeek(matchDate, today)) {
-    label = DIAS[matchDate.getDay()]
   } else {
     const diaNum = matchDate.getDate()
     const mes = MESES[matchDate.getMonth()]
     const diaNombre = DIAS[matchDate.getDay()]
-    label = today.getMonth() === matchDate.getMonth()
-      ? `${diaNombre} ${diaNum}`
-      : `${diaNombre} ${diaNum} ${mes}`
+    label = `${diaNombre} ${diaNum} ${mes}`
   }
 
   return time ? `${label} · ${time}` : label

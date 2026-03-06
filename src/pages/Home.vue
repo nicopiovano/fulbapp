@@ -72,6 +72,19 @@ const filteredMatches = computed(() => {
   return list
 })
 
+const sortBy = ref('date')
+
+const sortedMatches = computed(() => {
+  const list = [...filteredMatches.value]
+  if (sortBy.value === 'level-asc') {
+    return list.sort((a, b) => (a.difficulty ?? 0) - (b.difficulty ?? 0))
+  }
+  if (sortBy.value === 'level-desc') {
+    return list.sort((a, b) => (b.difficulty ?? 0) - (a.difficulty ?? 0))
+  }
+  return list.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+})
+
 const joinLoadingId = ref(null)
 
 function getDistance(match) {
@@ -163,6 +176,17 @@ onMounted(async () => {
         >
           Crear partido
         </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-sm text-slate-600 dark:text-slate-400">Ordenar por</label>
+          <select
+            v-model="sortBy"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          >
+            <option value="date">Fecha</option>
+            <option value="level-asc">Nivel (menor a mayor)</option>
+            <option value="level-desc">Nivel (mayor a menor)</option>
+          </select>
+        </div>
         <button
           type="button"
           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -179,7 +203,7 @@ onMounted(async () => {
         class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
       >
         <MatchCard
-          v-for="m in filteredMatches"
+          v-for="m in sortedMatches"
           :key="m.id"
           :match="m"
           :players="getPlayers(m)"
@@ -191,7 +215,7 @@ onMounted(async () => {
           @leave="handleLeave(m)"
         />
       </div>
-      <p v-if="!loading && !filteredMatches.length" class="py-12 text-center text-slate-500 dark:text-slate-400">
+      <p v-if="!loading && !sortedMatches.length" class="py-12 text-center text-slate-500 dark:text-slate-400">
         No hay partidos que coincidan con los filtros.
       </p>
     </main>
