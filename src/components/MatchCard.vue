@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { MATCH_TYPES } from '@/types'
+import { MATCH_TYPES, FIELD_SURFACE_TYPES, ESTABLISHMENT_COVERED, ESTABLISHMENT_AMENITIES, MATCH_GENDERS } from '@/types'
 import { formatMatchDate } from '@/utils/formatDate'
 import { isMatchPast as checkMatchPast } from '@/utils/matchDate'
 import { formatPrice } from '@/utils/formatPrice'
@@ -45,6 +45,19 @@ const isMatchPast = computed(() =>
 )
 const displayDate = computed(() => formatMatchDate(props.match.date, props.match.time))
 const displayPrice = computed(() => formatPrice(props.match.price))
+const fieldSurfaceLabel = computed(() =>
+  props.match.fieldSurface ? FIELD_SURFACE_TYPES[props.match.fieldSurface]?.label : null
+)
+const establishmentCoveredLabel = computed(() =>
+  props.match.establishmentCovered ? ESTABLISHMENT_COVERED[props.match.establishmentCovered]?.label : null
+)
+const amenitiesLabels = computed(() => {
+  const arr = props.match.establishmentAmenities || []
+  return arr.map((key) => ESTABLISHMENT_AMENITIES[key]?.label).filter(Boolean)
+})
+const matchGenderLabel = computed(() =>
+  props.match.matchGender ? MATCH_GENDERS[props.match.matchGender]?.label : null
+)
 </script>
 
 <template>
@@ -76,6 +89,12 @@ const displayPrice = computed(() => formatPrice(props.match.price))
     <p v-if="displayPrice" class="text-sm font-medium text-slate-700 dark:text-slate-200">
       {{ displayPrice }}
     </p>
+    <div v-if="fieldSurfaceLabel || establishmentCoveredLabel || amenitiesLabels.length || matchGenderLabel" class="mt-1 flex flex-wrap gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+      <span v-if="fieldSurfaceLabel" class="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-700">{{ fieldSurfaceLabel }}</span>
+      <span v-if="establishmentCoveredLabel" class="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-700">{{ establishmentCoveredLabel }}</span>
+      <span v-for="l in amenitiesLabels" :key="l" class="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-700">{{ l }}</span>
+      <span v-if="matchGenderLabel" class="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-700">{{ matchGenderLabel }}</span>
+    </div>
     <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
       Jugadores: {{ count }} / {{ max }}
     </p>

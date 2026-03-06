@@ -28,6 +28,11 @@ const filters = ref({
   difficultyMax: null,
   dateFrom: '',
   dateTo: '',
+  fieldSurface: '',
+  establishmentCovered: '',
+  hasBuffet: false,
+  hasVestuario: false,
+  matchGender: '',
 })
 const userCoords = ref(null)
 const playersByMatch = ref(/** @type {Record<string, import('@/types').User[]>} */ ({}))
@@ -48,6 +53,21 @@ const filteredMatches = computed(() => {
   }
   if (filters.value.dateTo) {
     list = list.filter((m) => m.date <= filters.value.dateTo)
+  }
+  if (filters.value.fieldSurface) {
+    list = list.filter((m) => m.fieldSurface === filters.value.fieldSurface)
+  }
+  if (filters.value.establishmentCovered) {
+    list = list.filter((m) => m.establishmentCovered === filters.value.establishmentCovered)
+  }
+  if (filters.value.hasBuffet) {
+    list = list.filter((m) => Array.isArray(m.establishmentAmenities) && m.establishmentAmenities.includes('buffet'))
+  }
+  if (filters.value.hasVestuario) {
+    list = list.filter((m) => Array.isArray(m.establishmentAmenities) && m.establishmentAmenities.includes('vestuario'))
+  }
+  if (filters.value.matchGender) {
+    list = list.filter((m) => m.matchGender === filters.value.matchGender)
   }
   return list
 })
