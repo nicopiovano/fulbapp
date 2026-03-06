@@ -133,7 +133,7 @@ onMounted(async () => {
 <template>
   <div class="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
     <AppNavbar />
-    <main class="mx-auto max-w-6xl px-4 py-6">
+    <main class="relative z-0 mx-auto max-w-6xl px-4 pt-6 pb-8">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
         <h1 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Partidos disponibles</h1>
         <button
@@ -156,7 +156,7 @@ onMounted(async () => {
       <div v-if="loading" class="py-12 text-center text-slate-500 dark:text-slate-400">Cargando partidos…</div>
       <div
         v-else
-        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-1"
+        class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
       >
         <MatchCard
           v-for="m in filteredMatches"
