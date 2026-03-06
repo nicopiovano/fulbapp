@@ -10,8 +10,8 @@ const STORAGE_KEY = 'futbol-theme'
 export const useThemeStore = defineStore('theme', () => {
   const dark = ref(
     typeof localStorage !== 'undefined'
-      ? localStorage.getItem(STORAGE_KEY) === 'dark'
-      : false
+      ? (localStorage.getItem(STORAGE_KEY) ?? 'dark') === 'dark'
+      : true
   )
 
   function toggle() {
