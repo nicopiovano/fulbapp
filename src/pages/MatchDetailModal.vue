@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useMatchStore } from '@/stores/matchStore'
 import { useUIStore } from '@/stores/uiStore'
-import { MATCH_TYPES, RATING_CATEGORIES } from '@/types'
+import { MATCH_TYPES, RATING_CATEGORIES, FIELD_SURFACE_TYPES, ESTABLISHMENT_COVERED, ESTABLISHMENT_AMENITIES, MATCH_GENDERS } from '@/types'
 import { formatMatchDate, formatMatchDateFull } from '@/utils/formatDate'
 import { isMatchPast as checkMatchPast } from '@/utils/matchDate'
 import { formatPrice } from '@/utils/formatPrice'
@@ -229,6 +229,26 @@ function handleClose() {
         {{ formatPrice(match.price) }}
       </p>
       <p v-if="match.description" class="text-slate-600 dark:text-slate-300">{{ match.description }}</p>
+      <div v-if="match.fieldSurface || match.establishmentCovered || (match.establishmentAmenities && match.establishmentAmenities.length) || match.matchGender" class="flex flex-wrap gap-2 text-sm">
+        <span v-if="match.fieldSurface" class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+          Cancha: {{ FIELD_SURFACE_TYPES[match.fieldSurface]?.label }}
+        </span>
+        <span v-if="match.establishmentCovered" class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+          {{ ESTABLISHMENT_COVERED[match.establishmentCovered]?.label }}
+        </span>
+        <template v-if="match.establishmentAmenities?.length">
+          <span
+            v-for="key in match.establishmentAmenities"
+            :key="key"
+            class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+          >
+            {{ ESTABLISHMENT_AMENITIES[key]?.label }}
+          </span>
+        </template>
+        <span v-if="match.matchGender" class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+          {{ MATCH_GENDERS[match.matchGender]?.label }}
+        </span>
+      </div>
       <p class="text-sm text-slate-500 dark:text-slate-400">Jugadores: {{ count }} / {{ max }}</p>
 
       <div class="rounded-card border border-slate-200 overflow-hidden bg-slate-50 dark:border-slate-600 dark:bg-slate-700/50" style="height: 200px">

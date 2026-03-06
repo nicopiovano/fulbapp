@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { MATCH_TYPES } from '@/types'
+import { MATCH_TYPES, FIELD_SURFACE_TYPES, ESTABLISHMENT_COVERED, ESTABLISHMENT_AMENITIES, MATCH_GENDERS } from '@/types'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -12,6 +12,11 @@ const props = defineProps({
       difficultyMax: null,
       dateFrom: '',
       dateTo: '',
+      fieldSurface: '',
+      establishmentCovered: '',
+      hasBuffet: false,
+      hasVestuario: false,
+      matchGender: '',
     }),
   },
 })
@@ -30,6 +35,19 @@ function apply() {
   emit('close')
 }
 
+const fieldSurfaceOptions = computed(() => [
+  { value: '', label: 'Cualquiera' },
+  ...Object.entries(FIELD_SURFACE_TYPES).map(([value, { label }]) => ({ value, label })),
+])
+const establishmentCoveredOptions = computed(() => [
+  { value: '', label: 'Cualquiera' },
+  ...Object.entries(ESTABLISHMENT_COVERED).map(([value, { label }]) => ({ value, label })),
+])
+const matchGenderOptions = computed(() => [
+  { value: '', label: 'Cualquiera' },
+  ...Object.entries(MATCH_GENDERS).map(([value, { label }]) => ({ value, label })),
+])
+
 function clear() {
   local.value = {
     type: '',
@@ -37,6 +55,11 @@ function clear() {
     difficultyMax: null,
     dateFrom: '',
     dateTo: '',
+    fieldSurface: '',
+    establishmentCovered: '',
+    hasBuffet: false,
+    hasVestuario: false,
+    matchGender: '',
   }
   emit('update:filters', { ...local.value })
   emit('close')
@@ -111,6 +134,49 @@ function clear() {
             type="date"
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de cancha</label>
+          <select
+            v-model="local.fieldSurface"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <option v-for="opt in fieldSurfaceOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Establecimiento</label>
+          <select
+            v-model="local.establishmentCovered"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <option v-for="opt in establishmentCoveredOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <div class="mt-2 flex flex-wrap gap-3">
+            <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-slate-600 dark:text-slate-300">
+              <input v-model="local.hasBuffet" type="checkbox" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+              {{ ESTABLISHMENT_AMENITIES.buffet.label }}
+            </label>
+            <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-slate-600 dark:text-slate-300">
+              <input v-model="local.hasVestuario" type="checkbox" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+              {{ ESTABLISHMENT_AMENITIES.vestuario.label }}
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Género del partido</label>
+          <select
+            v-model="local.matchGender"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <option v-for="opt in matchGenderOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
         </div>
         <div class="flex gap-2 pt-2">
           <button

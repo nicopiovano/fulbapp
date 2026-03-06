@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useMatchStore } from '@/stores/matchStore'
 import { useUIStore } from '@/stores/uiStore'
-import { MATCH_TYPES } from '@/types'
+import { MATCH_TYPES, FIELD_SURFACE_TYPES, ESTABLISHMENT_COVERED, ESTABLISHMENT_AMENITIES, MATCH_GENDERS } from '@/types'
 import BaseModal from '@/components/BaseModal.vue'
 import MapPicker from '@/components/MapPicker.vue'
 
@@ -22,12 +22,36 @@ const form = ref({
   price: null,
   difficulty: 5,
   location: null,
+  fieldSurface: '',
+  establishmentCovered: '',
+  establishmentAmenities: [],
+  matchGender: 'mixto',
 })
 const submitting = ref(false)
 const error = ref('')
 
 const maxPlayers = computed(() => MATCH_TYPES[form.value.type]?.maxPlayers ?? 10)
 const typeOptions = computed(() => Object.entries(MATCH_TYPES).map(([value, { label }]) => ({ value, label })))
+const fieldSurfaceOptions = computed(() => [
+  { value: '', label: 'Sin especificar' },
+  ...Object.entries(FIELD_SURFACE_TYPES).map(([value, { label }]) => ({ value, label })),
+])
+const establishmentCoveredOptions = computed(() => [
+  { value: '', label: 'Sin especificar' },
+  ...Object.entries(ESTABLISHMENT_COVERED).map(([value, { label }]) => ({ value, label })),
+])
+const establishmentAmenityOptions = computed(() =>
+  Object.entries(ESTABLISHMENT_AMENITIES).map(([value, { label }]) => ({ value, label }))
+)
+const matchGenderOptions = computed(() =>
+  Object.entries(MATCH_GENDERS).map(([value, { label }]) => ({ value, label }))
+)
+
+function toggleAmenity(value) {
+  const arr = form.value.establishmentAmenities || []
+  const next = arr.includes(value) ? arr.filter((a) => a !== value) : [...arr, value]
+  form.value.establishmentAmenities = next
+}
 
 async function submit() {
   if (!isAuthenticated.value) {
@@ -56,6 +80,10 @@ async function submit() {
       price: form.value.price ? Number(form.value.price) : null,
       difficulty: Math.min(10, Math.max(1, form.value.difficulty)),
       location: form.value.location,
+      fieldSurface: form.value.fieldSurface || undefined,
+      establishmentCovered: form.value.establishmentCovered || undefined,
+      establishmentAmenities: Array.isArray(form.value.establishmentAmenities) ? form.value.establishmentAmenities : [],
+      matchGender: form.value.matchGender || 'mixto',
     })
     uiStore.closeModal()
     form.value = {
@@ -67,6 +95,10 @@ async function submit() {
       price: null,
       difficulty: 5,
       location: null,
+      fieldSurface: '',
+      establishmentCovered: '',
+      establishmentAmenities: [],
+      matchGender: 'mixto',
     }
   } catch (e) {
     error.value = e?.message || 'Error al crear partido'
@@ -127,6 +159,57 @@ const show = computed(() => uiStore.isCreateMatchOpen)
           class="w-full h-2 rounded-lg appearance-none bg-slate-200 dark:bg-slate-600 accent-primary-500"
         />
         <p class="text-sm text-slate-600 dark:text-slate-300">Nivel {{ form.difficulty }}</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de cancha</label>
+        <select
+          v-model="form.fieldSurface"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+        >
+          <option v-for="opt in fieldSurfaceOptions" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Establecimiento</label>
+        <select
+          v-model="form.establishmentCovered"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+        >
+          <option v-for="opt in establishmentCoveredOptions" :key="opt.value === '' ? 'none' : opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+        <div class="mt-2 flex flex-wrap gap-3">
+          <label
+            v-for="opt in establishmentAmenityOptions"
+            :key="opt.value"
+            class="inline-flex items-center gap-2 cursor-pointer text-sm text-slate-600 dark:text-slate-300"
+          >
+            <input
+              type="checkbox"
+              :checked="(form.establishmentAmenities || []).includes(opt.value)"
+              class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+              @change="toggleAmenity(opt.value)"
+            />
+            {{ opt.label }}
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Género del partido</label>
+        <select
+          v-model="form.matchGender"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+        >
+          <option v-for="opt in matchGenderOptions" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
       </div>
 
       <div>
