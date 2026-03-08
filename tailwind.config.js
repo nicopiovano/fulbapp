@@ -27,6 +27,14 @@ export default {
           blue: '#6b9bd1',
           orange: '#e8a76a',
         },
+        // Identificación rápida por tipo de partido (F5, F7, F8, F9, F11)
+        matchType: {
+          f5: '#22c55e',
+          f7: '#3b82f6',
+          f8: '#f59e0b',
+          f9: '#8b5cf6',
+          f11: '#e11d48',
+        },
       },
       fontFamily: {
         sans: ['DM Sans', 'system-ui', 'sans-serif'],

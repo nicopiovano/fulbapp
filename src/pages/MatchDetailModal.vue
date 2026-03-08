@@ -43,6 +43,22 @@ const ratingLoading = ref(false)
 const matchId = computed(() => uiStore.modalPayload?.matchId ?? null)
 
 const typeLabel = computed(() => (match.value ? MATCH_TYPES[match.value.type]?.label : ''))
+
+const MATCH_TYPE_COLORS = {
+  f5: '#22c55e',
+  f7: '#3b82f6',
+  f8: '#f59e0b',
+  f9: '#8b5cf6',
+  f11: '#e11d48',
+}
+const watermarkStyle = computed(() => {
+  if (!match.value?.type) return {}
+  const hex = MATCH_TYPE_COLORS[match.value.type] ?? '#64748b'
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return { color: `rgba(${r}, ${g}, ${b}, 0.18)` }
+})
 const count = computed(() => match.value?.playerIds?.length ?? 0)
 const max = computed(() => match.value?.maxPlayers ?? 0)
 const isFull = computed(() => count.value >= max.value)
@@ -216,15 +232,33 @@ function handleClose() {
     @close="handleClose"
   >
     <div v-if="!match && matchId" class="p-6 text-center text-slate-500 dark:text-slate-400">Cargando…</div>
-    <div v-else-if="match" class="p-4 space-y-6">
-      <div class="flex flex-wrap gap-2">
-        <span class="rounded bg-primary-100 px-2 py-0.5 text-sm font-medium text-primary-800 dark:bg-primary-900/40 dark:text-primary-200">
+    <div
+      v-else-if="match"
+      class="relative overflow-hidden border-l-4 p-4 space-y-6"
+      :class="[
+        match.type === 'f5' && 'border-l-matchType-f5',
+        match.type === 'f7' && 'border-l-matchType-f7',
+        match.type === 'f8' && 'border-l-matchType-f8',
+        match.type === 'f9' && 'border-l-matchType-f9',
+        match.type === 'f11' && 'border-l-matchType-f11',
+      ]"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 flex items-start justify-end pt-2 pr-3"
+        aria-hidden="true"
+      >
+        <span
+          class="select-none text-lg font-bold tracking-tight"
+          :style="watermarkStyle"
+        >
           {{ typeLabel }}
         </span>
+      </div>
+      <div class="relative z-10 flex flex-wrap gap-2">
         <DifficultyBadge :level="match.difficulty" />
         <span class="text-slate-600 dark:text-slate-300">{{ formatMatchDateFull(match.date, match.time) }}</span>
       </div>
-      <h3 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{ match.placeName }}</h3>
+      <h3 class="relative z-10 text-xl font-semibold text-slate-800 dark:text-slate-100">{{ match.placeName }}</h3>
       <p v-if="match.price" class="text-base font-medium text-slate-700 dark:text-slate-200">
         {{ formatPrice(match.price) }}
       </p>
