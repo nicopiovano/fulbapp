@@ -74,7 +74,7 @@ export const useMatchStore = defineStore('match', () => {
     if (!userId.value) throw new Error('Debes iniciar sesión')
     error.value = null
     try {
-      const updated = await matchService.joinMatch(matchId, userId.value)
+      const updated = await matchService.joinMatch(matchId)
       const idx = matches.value.findIndex((m) => m.id === matchId)
       if (idx >= 0) {
         matches.value = matches.value.map((m, i) =>
@@ -92,7 +92,7 @@ export const useMatchStore = defineStore('match', () => {
     if (!userId.value) return
     error.value = null
     try {
-      const updated = await matchService.leaveMatch(matchId, userId.value)
+      const updated = await matchService.leaveMatch(matchId)
       const idx = matches.value.findIndex((m) => m.id === matchId)
       if (idx >= 0) {
         matches.value = matches.value.map((m, i) =>
@@ -101,7 +101,25 @@ export const useMatchStore = defineStore('match', () => {
       }
       return updated
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Error al cancelar'
+      error.value = e instanceof Error ? e.message : 'Error al bajarme'
+      throw e
+    }
+  }
+
+  async function cancelMatch(matchId) {
+    if (!userId.value) throw new Error('Debes iniciar sesión')
+    error.value = null
+    try {
+      const updated = await matchService.cancelMatch(matchId)
+      const idx = matches.value.findIndex((m) => m.id === matchId)
+      if (idx >= 0) {
+        matches.value = matches.value.map((m, i) =>
+          i === idx ? { ...updated } : { ...m }
+        )
+      }
+      return updated
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Error al cancelar partido'
       throw e
     }
   }
@@ -136,6 +154,7 @@ export const useMatchStore = defineStore('match', () => {
     createMatch,
     joinMatch,
     leaveMatch,
+    cancelMatch,
     updateMatch,
   }
 })

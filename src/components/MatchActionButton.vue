@@ -4,7 +4,7 @@ import { computed } from "vue";
 const props = defineProps({
   state: {
     type: String,
-    default: "join", // 'join' | 'leave' | 'past' | 'cancelled' | 'full'
+    default: "join", // 'join' | 'leave' | 'cancel' | 'past' | 'cancelled' | 'full'
   },
   loading: {
     type: Boolean,
@@ -17,6 +17,7 @@ const emit = defineEmits(["click"]);
 const LABELS = {
   join: "Anotarme",
   leave: "Bajarme",
+  cancel: "Cancelar partido",
   past: "Ya jugado",
   cancelled: "Cancelado",
   full: "Completo",
@@ -30,6 +31,9 @@ const classes = computed(() => {
   }
   if (props.state === "leave") {
     return "border border-primary-500 text-primary-600 bg-white hover:bg-primary-50 dark:border-primary-400 dark:text-primary-200 dark:bg-slate-800 dark:hover:bg-slate-700";
+  }
+  if (props.state === "cancel") {
+    return "border border-red-400 text-red-600 bg-white hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:bg-slate-800 dark:hover:bg-slate-700";
   }
   if (
     props.state === "past" ||

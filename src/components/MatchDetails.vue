@@ -10,10 +10,6 @@ const props = defineProps({
     type: Number,
     required: true,
   },
-  isNew: {
-    type: Boolean,
-    default: false,
-  },
   isToday: {
     type: Boolean,
     default: false,
@@ -49,12 +45,6 @@ const props = defineProps({
       {{ typeLabel }}
     </span>
     <DifficultyBadge :level="difficulty" />
-    <span
-      v-if="isNew"
-      class="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-    >
-      Nuevo
-    </span>
     <span
       v-if="isToday"
       class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"

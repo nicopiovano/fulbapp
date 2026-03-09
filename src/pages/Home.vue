@@ -1,10 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useMatchStore } from '@/stores/matchStore'
 import { useUIStore } from '@/stores/uiStore'
-import * as userService from '@/services/userService'
 import { getDistanceKm } from '@/utils/geo'
 import AppNavbar from '@/components/AppNavbar.vue'
 import AppFooter from '@/components/AppFooter.vue'
@@ -19,7 +18,7 @@ import MapModal from '@/pages/MapModal.vue'
 const authStore = useAuthStore()
 const matchStore = useMatchStore()
 const uiStore = useUIStore()
-const { userId } = storeToRefs(authStore)
+const { userId, isAuthenticated } = storeToRefs(authStore)
 const { matches, loading, error } = storeToRefs(matchStore)
 
 const filters = ref({
@@ -174,27 +173,17 @@ function getPlayers(match) {
   return playersByMatch.value[match.id] ?? []
 }
 
-async function loadPlayersForMatches() {
-  const ids = new Set()
-  matches.value.forEach((m) => m.playerIds?.forEach((id) => ids.add(id)))
-  const users = await userService.getUsersByIds([...ids])
+function loadPlayersForMatches() {
   const byMatch = {}
   matches.value.forEach((m) => {
-    byMatch[m.id] = (m.playerIds || [])
-      .map((id) => users.find((u) => u.id === id))
-      .filter(Boolean)
+    byMatch[m.id] = m.players ?? []
   })
   playersByMatch.value = byMatch
 }
 
-async function updatePlayersForMatch(matchId) {
+function updatePlayersForMatch(matchId) {
   const m = matches.value.find((x) => x.id === matchId)
-  if (!m?.playerIds?.length) {
-    playersByMatch.value = { ...playersByMatch.value, [matchId]: [] }
-    return
-  }
-  const users = await userService.getUsersByIds(m.playerIds)
-  playersByMatch.value = { ...playersByMatch.value, [matchId]: users }
+  playersByMatch.value = { ...playersByMatch.value, [matchId]: m?.players ?? [] }
 }
 
 async function handleJoin(match) {
@@ -211,7 +200,17 @@ async function handleLeave(match) {
   joinLoadingId.value = match.id
   try {
     await matchStore.leaveMatch(match.id)
-    await updatePlayersForMatch(match.id)
+    updatePlayersForMatch(match.id)
+  } finally {
+    joinLoadingId.value = null
+  }
+}
+
+async function handleCancel(match) {
+  if (!confirm(`¿Cancelar el partido en ${match.placeName}? Esta acción no se puede deshacer.`)) return
+  joinLoadingId.value = match.id
+  try {
+    await matchStore.cancelMatch(match.id)
   } finally {
     joinLoadingId.value = null
   }
@@ -221,10 +220,18 @@ function openDetail(match) {
   uiStore.openMatchDetail(match.id)
 }
 
-onMounted(async () => {
-  await authStore.fetchCurrentUser()
+async function loadData() {
   await matchStore.fetchMatches()
-  await loadPlayersForMatches()
+  loadPlayersForMatches()
+}
+
+// Re-fetch cada vez que el usuario se loguea o desloguea
+watch(isAuthenticated, (authenticated, wasAuthenticated) => {
+  if (authenticated !== wasAuthenticated) loadData()
+})
+
+onMounted(async () => {
+  await loadData()
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -332,6 +339,8 @@ onMounted(async () => {
           @click="openDetail(m)"
           @join="handleJoin(m)"
           @leave="handleLeave(m)"
+          @cancel="handleCancel(m)"
+          @rate="openDetail(m)"
         />
       </div>
       <p v-if="!loading && !sortedMatches.length" class="py-12 text-center text-slate-500 dark:text-slate-400">

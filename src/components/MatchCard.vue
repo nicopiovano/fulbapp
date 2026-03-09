@@ -30,7 +30,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["click", "join", "leave"]);
+const emit = defineEmits(["click", "join", "leave", "cancel", "rate"]);
 
 const typeLabel = computed(
   () => MATCH_TYPES[props.match.type]?.label ?? props.match.type,
@@ -54,18 +54,11 @@ const displayDistance = computed(() => {
   if (props.distanceKm < 1) return `${Math.round(props.distanceKm * 1000)} m`;
   return `${props.distanceKm.toFixed(1)} km`;
 });
-const isNew = computed(() => {
-  const created = props.match.createdAt
-    ? new Date(props.match.createdAt).getTime()
-    : 0;
-  return Date.now() - created < 48 * 60 * 60 * 1000;
-});
+
 const isCompetitive = computed(() => props.match.difficulty >= 8);
 const isAlmostFull = computed(
   () =>
-    capacity.value > 0 &&
-    count.value >= capacity.value - 2 &&
-    !isFull.value,
+    capacity.value > 0 && count.value >= capacity.value - 2 && !isFull.value,
 );
 const isMatchPast = computed(() =>
   checkMatchPast(props.match?.date, props.match?.time),
@@ -97,23 +90,21 @@ const playersTooltip = (player) => {
 const buttonState = computed(() => {
   if (props.match?.cancelled) return "cancelled";
   if (isMatchPast.value) return "past";
+  if (isCreator.value) return "cancel";
   if (isJoined.value) return "leave";
   if (isFull.value) return "full";
   return "join";
 });
 
-const isCreator = computed(
-  () =>
-    props.currentUserId &&
-    props.match?.createdBy &&
-    props.match.createdBy === props.currentUserId
-);
+const isCreator = computed(() => props.match?.isCreator ?? false);
 
 function handlePrimaryActionClick() {
   if (buttonState.value === "join") {
     emit("join");
   } else if (buttonState.value === "leave") {
     emit("leave");
+  } else if (buttonState.value === "cancel") {
+    emit("cancel");
   }
 }
 
@@ -136,7 +127,6 @@ function handleEditClick() {
       <MatchDetails
         :type-label="typeLabel"
         :difficulty="match.difficulty"
-        :is-new="isNew"
         :is-today="isToday"
         :is-competitive="isCompetitive"
         :slots-left="slotsLeft"
@@ -166,53 +156,66 @@ function handleEditClick() {
 
       <!-- Bloque de capacidad fijo en la parte inferior del contenido -->
       <div class="mt-auto space-y-1 pt-2">
-        <div
-          class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
-        >
-          <span v-if="slotsLeft > 0"
-            >Falta{{ slotsLeft === 1 ? "" : "n" }} {{ slotsLeft }} jugador{{
-              slotsLeft === 1 ? "" : "es"
-            }}</span
-          >
-          <span v-else class="font-medium text-red-500 dark:text-red-300"
-            >Partido completo</span
-          >
-          <span class="text-[11px] text-slate-500 dark:text-slate-400">
-            {{ count }} / {{ capacity || 0 }}
-          </span>
-        </div>
-        <div
-          class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
-        >
+        <template v-if="!isMatchPast">
           <div
-            class="h-full rounded-full bg-primary-500 transition-all"
-            :style="{
-              width: `${Math.min(
-                capacity ? (count / capacity) * 100 : 0,
-                100,
-              )}%`,
-            }"
-          />
-        </div>
-        <p
-          v-if="displayDistance"
-          class="text-xs text-slate-500 dark:text-slate-400"
-        >
-          📍 ~ {{ displayDistance }}
-        </p>
+            class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
+          >
+            <span v-if="slotsLeft > 0"
+              >Falta{{ slotsLeft === 1 ? "" : "n" }} {{ slotsLeft }} jugador{{
+                slotsLeft === 1 ? "" : "es"
+              }}</span
+            >
+            <span v-else class="font-medium text-red-500 dark:text-red-300"
+              >Partido completo</span
+            >
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">
+              {{ count }} / {{ capacity || 0 }}
+            </span>
+          </div>
+          <div
+            class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+          >
+            <div
+              class="h-full rounded-full bg-primary-500 transition-all"
+              :style="{
+                width: `${Math.min(
+                  capacity ? (count / capacity) * 100 : 0,
+                  100,
+                )}%`,
+              }"
+            />
+          </div>
+          <p
+            v-if="displayDistance"
+            class="text-xs text-slate-500 dark:text-slate-400"
+          >
+            📍 ~ {{ displayDistance }}
+          </p>
+        </template>
       </div>
     </div>
 
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2" @click.stop>
+      <!-- Partido pasado, no cancelado, soy el creador → calificar -->
+      <button
+        v-if="isMatchPast && !match.cancelled && isCreator"
+        type="button"
+        class="inline-flex min-w-[7rem] items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400"
+        @click.stop="emit('rate')"
+      >
+        Puntuar Jugadores
+      </button>
+      <!-- Partido futuro, soy el creador → editar -->
       <button
         v-if="isCreator && !match.cancelled && !isMatchPast"
         type="button"
         class="inline-flex min-w-[7rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-        @click="handleEditClick"
+        @click.stop="handleEditClick"
       >
         Editar
       </button>
       <MatchActionButton
+        v-if="!isMatchPast || match.cancelled"
         :state="buttonState"
         :loading="loading"
         @click="handlePrimaryActionClick()"

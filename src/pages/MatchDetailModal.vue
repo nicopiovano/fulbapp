@@ -70,9 +70,7 @@ const isMatchPast = computed(() =>
   checkMatchPast(match.value?.date, match.value?.time),
 );
 
-const isCreator = computed(
-  () => userId.value && match.value?.createdBy === userId.value,
-);
+const isCreator = computed(() => match.value?.isCreator ?? false);
 
 const participantsToRate = computed(() =>
   players.value.filter((p) => p.id !== match.value?.createdBy),
@@ -118,7 +116,7 @@ async function load() {
   const m = await matchStore.fetchMatchById(matchId.value);
   match.value = m;
   if (m?.playerIds?.length) {
-    players.value = await userService.getUsersByIds(m.playerIds);
+    players.value = m.players?.length ? m.players : await userService.getUsersByIds(m.playerIds);
     const ratingsMap = {};
     for (const pid of m.playerIds) {
       ratingsMap[pid] = await ratingService.getRatingAveragesForUser(pid);
@@ -412,7 +410,7 @@ const buttonState = computed(() => {
       </div>
 
       <div
-        v-if="isMatchPast && isCreator && participantsToRate.length"
+        v-if="isMatchPast && !match?.cancelled && isCreator && participantsToRate.length"
         id="calificar-jugadores"
         class="space-y-4 rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/30"
       >
@@ -463,7 +461,7 @@ const buttonState = computed(() => {
       </div>
 
       <div
-        v-if="balanced && (balanced.teamA.length || balanced.teamB.length)"
+        v-if="!isMatchPast && !match?.cancelled && balanced && (balanced.teamA.length || balanced.teamB.length)"
         class="space-y-4"
       >
         <h4 class="font-semibold text-slate-800 dark:text-slate-100">
@@ -496,17 +494,6 @@ const buttonState = computed(() => {
           :loading="joinLoading"
           @click="buttonState === 'join' ? handleJoin() : handleLeave()"
         />
-      </div>
-      <div
-        v-else-if="isMatchPast && isCreator && participantsToRate.length"
-        class="flex gap-3 pt-2"
-      >
-        <a
-          href="#calificar-jugadores"
-          class="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 dark:bg-primary-500"
-        >
-          Calificar jugadores
-        </a>
       </div>
     </div>
   </BaseModal>
