@@ -55,8 +55,13 @@ const typeLabel = computed(() =>
   match.value ? MATCH_TYPES[match.value.type]?.label : "",
 );
 const count = computed(() => match.value?.playerIds?.length ?? 0);
-const max = computed(() => match.value?.maxPlayers ?? 0);
-const isFull = computed(() => count.value >= max.value);
+const capacity = computed(
+  () => match.value?.openSlots ?? match.value?.maxPlayers ?? 0,
+);
+const max = capacity;
+const isFull = computed(
+  () => capacity.value > 0 && count.value >= capacity.value,
+);
 const isJoined = computed(
   () => userId.value && match.value?.playerIds?.includes(userId.value),
 );

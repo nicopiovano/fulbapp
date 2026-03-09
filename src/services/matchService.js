@@ -53,7 +53,10 @@ export async function joinMatch(matchId, userId) {
   const match = matches.find((m) => m.id === matchId)
   if (!match) throw new Error('Partido no encontrado')
   if (match.playerIds.includes(userId)) throw new Error('Ya estás anotado')
-  if (match.playerIds.length >= match.maxPlayers) throw new Error('Partido completo')
+  const capacity = typeof match.openSlots === 'number' && match.openSlots > 0
+    ? match.openSlots
+    : match.maxPlayers
+  if (capacity && match.playerIds.length >= capacity) throw new Error('Partido completo')
   match.playerIds = [...match.playerIds, userId]
   return match
 }

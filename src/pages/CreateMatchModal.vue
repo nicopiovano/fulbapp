@@ -30,6 +30,7 @@ const form = ref({
   price: null,
   difficulty: 5,
   location: null,
+  openSlots: null,
   fieldSurface: "",
   establishmentCovered: "",
   establishmentAmenities: [],
@@ -90,11 +91,16 @@ async function setAddressFromCoords(lat, lng) {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: { Accept: "application/json" } }
+      { headers: { Accept: "application/json" } },
     );
     const data = await res.json();
     if (data?.display_name) {
-      form.value.location = { ...form.value.location, lat, lng, label: data.display_name };
+      form.value.location = {
+        ...form.value.location,
+        lat,
+        lng,
+        label: data.display_name,
+      };
     }
   } catch {
     form.value.location = { ...form.value.location, lat, lng };
@@ -117,6 +123,7 @@ function resetForm() {
     price: null,
     difficulty: 5,
     location: null,
+    openSlots: null,
     fieldSurface: "",
     establishmentCovered: "",
     establishmentAmenities: [],
@@ -130,7 +137,8 @@ function resetForm() {
 function fillFormFromMatch(m) {
   if (!m) return;
   const loc = m.location;
-  const hasCoords = loc && typeof loc.lat === "number" && typeof loc.lng === "number";
+  const hasCoords =
+    loc && typeof loc.lat === "number" && typeof loc.lng === "number";
   form.value = {
     type: m.type ?? "f5",
     date: m.date ? String(m.date).slice(0, 10) : "",
@@ -138,7 +146,10 @@ function fillFormFromMatch(m) {
     placeName: m.placeName ?? "",
     description: m.description ?? "",
     price: m.price != null ? Number(m.price) : null,
-    difficulty: m.difficulty != null ? Math.min(10, Math.max(1, Number(m.difficulty))) : 5,
+    difficulty:
+      m.difficulty != null
+        ? Math.min(10, Math.max(1, Number(m.difficulty)))
+        : 5,
     location: hasCoords
       ? {
           lat: loc.lat,
@@ -146,6 +157,7 @@ function fillFormFromMatch(m) {
           label: m.address || loc.label || "",
         }
       : null,
+    openSlots: m.openSlots != null ? Number(m.openSlots) : null,
     fieldSurface: m.fieldSurface ?? "",
     establishmentCovered: m.establishmentCovered ?? "",
     establishmentAmenities: Array.isArray(m.establishmentAmenities)
@@ -161,6 +173,18 @@ function toggleAmenity(value) {
     ? arr.filter((a) => a !== value)
     : [...arr, value];
   form.value.establishmentAmenities = next;
+}
+
+function handleOpenSlotsInput(event) {
+  const raw = String(event?.target?.value ?? "");
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) {
+    form.value.openSlots = null;
+    return;
+  }
+  const value = Number(digits);
+  const max = maxPlayers.value || Infinity;
+  form.value.openSlots = Math.min(value, max);
 }
 
 async function submit() {
@@ -191,6 +215,10 @@ async function submit() {
     price: form.value.price ? Number(form.value.price) : null,
     difficulty: Math.min(10, Math.max(1, form.value.difficulty)),
     location: form.value.location,
+    openSlots:
+      form.value.openSlots != null && form.value.openSlots > 0
+        ? Math.min(Number(form.value.openSlots), maxPlayers.value)
+        : undefined,
     fieldSurface: form.value.fieldSurface || undefined,
     establishmentCovered: form.value.establishmentCovered || undefined,
     establishmentAmenities: Array.isArray(form.value.establishmentAmenities)
@@ -233,12 +261,12 @@ watch(
       resetForm();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const show = computed(() => isCreateMatchOpen.value);
 const modalTitle = computed(() =>
-  editingMatchId.value ? "Editar partido" : "Crear partido"
+  editingMatchId.value ? "Editar partido" : "Crear partido",
 );
 </script>
 
@@ -267,7 +295,7 @@ const modalTitle = computed(() =>
         </p>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label
             class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
@@ -300,6 +328,22 @@ const modalTitle = computed(() =>
                 ? 'border-slate-300 dark:border-slate-600 focus:border-primary-500 focus:ring-primary-500'
                 : 'border-red-500 dark:border-red-500 focus:border-red-500 focus:ring-red-500',
             ]"
+          />
+        </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
+            Faltan jugadores *
+          </label>
+          <input
+            v-model.number="form.openSlots"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="Ej: 2"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            @input="handleOpenSlotsInput"
           />
         </div>
       </div>
@@ -491,7 +535,13 @@ const modalTitle = computed(() =>
           class="flex-1 rounded-xl bg-primary px-4 py-3 font-medium text-white hover:bg-primary-600 dark:bg-primary-500 disabled:opacity-50"
           :disabled="submitting"
         >
-          {{ submitting ? "Guardando…" : (editingMatchId ? "Guardar cambios" : "Crear partido") }}
+          {{
+            submitting
+              ? "Guardando…"
+              : editingMatchId
+                ? "Guardar cambios"
+                : "Crear partido"
+          }}
         </button>
       </div>
     </form>

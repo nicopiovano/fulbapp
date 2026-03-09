@@ -36,11 +36,15 @@ const typeLabel = computed(
   () => MATCH_TYPES[props.match.type]?.label ?? props.match.type,
 );
 const count = computed(() => props.match.playerIds?.length ?? 0);
-const max = computed(() => props.match.maxPlayers ?? 0);
-const slotsLeft = computed(() =>
-  Math.max((max.value || 0) - (count.value || 0), 0),
+const capacity = computed(
+  () => props.match.openSlots ?? props.match.maxPlayers ?? 0,
 );
-const isFull = computed(() => count.value >= max.value);
+const slotsLeft = computed(() =>
+  Math.max((capacity.value || 0) - (count.value || 0), 0),
+);
+const isFull = computed(
+  () => capacity.value > 0 && count.value >= capacity.value,
+);
 const isJoined = computed(
   () =>
     props.currentUserId && props.match.playerIds?.includes(props.currentUserId),
@@ -58,7 +62,10 @@ const isNew = computed(() => {
 });
 const isCompetitive = computed(() => props.match.difficulty >= 8);
 const isAlmostFull = computed(
-  () => max.value > 0 && count.value >= max.value - 2 && !isFull.value,
+  () =>
+    capacity.value > 0 &&
+    count.value >= capacity.value - 2 &&
+    !isFull.value,
 );
 const isMatchPast = computed(() =>
   checkMatchPast(props.match?.date, props.match?.time),
@@ -171,7 +178,7 @@ function handleEditClick() {
             >Partido completo</span
           >
           <span class="text-[11px] text-slate-500 dark:text-slate-400">
-            {{ count }} / {{ max }}
+            {{ count }} / {{ capacity || 0 }}
           </span>
         </div>
         <div
@@ -180,7 +187,10 @@ function handleEditClick() {
           <div
             class="h-full rounded-full bg-primary-500 transition-all"
             :style="{
-              width: `${Math.min(max ? (count / max) * 100 : 0, 100)}%`,
+              width: `${Math.min(
+                capacity ? (count / capacity) * 100 : 0,
+                100,
+              )}%`,
             }"
           />
         </div>
