@@ -70,3 +70,29 @@ export async function leaveMatch(matchId, userId) {
   match.playerIds = match.playerIds.filter((id) => id !== userId)
   return match
 }
+
+const EDITABLE_KEYS = [
+  'type', 'maxPlayers', 'date', 'time', 'placeName', 'description', 'price',
+  'difficulty', 'location', 'fieldSurface', 'establishmentCovered',
+  'establishmentAmenities', 'matchGender', 'neighborhood', 'address', 'openSlots',
+]
+
+/**
+ * Actualiza un partido. Solo el creador puede editarlo (validado en store).
+ * @param {string} matchId
+ * @param {string} userId - debe ser el createdBy del partido
+ * @param {Partial<import('@/types').Match>} payload - campos a actualizar
+ * @returns {Promise<import('@/types').Match>}
+ */
+export async function updateMatch(matchId, userId, payload) {
+  await delay(400)
+  const match = matches.find((m) => m.id === matchId)
+  if (!match) throw new Error('Partido no encontrado')
+  if (match.createdBy !== userId) throw new Error('Solo el organizador puede editar el partido')
+  EDITABLE_KEYS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(payload, key)) {
+      match[key] = payload[key]
+    }
+  })
+  return { ...match }
+}

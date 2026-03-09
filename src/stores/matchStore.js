@@ -106,6 +106,27 @@ export const useMatchStore = defineStore('match', () => {
     }
   }
 
+  async function updateMatch(matchId, payload) {
+    if (!userId.value) throw new Error('Debes iniciar sesión')
+    loading.value = true
+    error.value = null
+    try {
+      const updated = await matchService.updateMatch(matchId, userId.value, payload)
+      const idx = matches.value.findIndex((m) => m.id === matchId)
+      if (idx >= 0) {
+        matches.value = matches.value.map((m, i) =>
+          i === idx ? { ...updated } : { ...m }
+        )
+      }
+      return updated
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Error al actualizar partido'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     matches: matchesList,
     loading,
@@ -115,5 +136,6 @@ export const useMatchStore = defineStore('match', () => {
     createMatch,
     joinMatch,
     leaveMatch,
+    updateMatch,
   }
 })

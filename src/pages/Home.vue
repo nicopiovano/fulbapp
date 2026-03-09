@@ -34,6 +34,13 @@ const filters = ref({
   hasVestuario: false,
   matchGender: '',
 })
+
+// Filtros rápidos (chips)
+const quickToday = ref(false)
+const quickNear = ref(false)
+const quickF5 = ref(false)
+const quickLevelMid = ref(false)
+const quickVestuario = ref(false)
 const userCoords = ref(null)
 const playersByMatch = ref(/** @type {Record<string, import('@/types').User[]>} */ ({}))
 
@@ -69,20 +76,86 @@ const filteredMatches = computed(() => {
   if (filters.value.matchGender) {
     list = list.filter((m) => m.matchGender === filters.value.matchGender)
   }
+
+  // Filtros rápidos
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+    today.getDate()
+  ).padStart(2, '0')}`
+
+  if (quickToday.value) {
+    list = list.filter((m) => m.date === todayStr)
+  }
+  if (quickF5.value) {
+    list = list.filter((m) => m.type === 'f5')
+  }
+  if (quickLevelMid.value) {
+    list = list.filter((m) => (m.difficulty ?? 0) >= 5 && (m.difficulty ?? 0) <= 7)
+  }
+  if (quickVestuario.value) {
+    list = list.filter(
+      (m) => Array.isArray(m.establishmentAmenities) && m.establishmentAmenities.includes('vestuario')
+    )
+  }
+  if (quickNear.value && userCoords.value) {
+    list = list
+      .map((m) => ({ match: m, dist: getDistance(m) }))
+      .filter((item) => item.dist != null && item.dist <= 5)
+      .map((item) => item.match)
+  }
   return list
 })
 
-const sortBy = ref('date')
+const sortBy = ref('recommended')
 
 const sortedMatches = computed(() => {
   const list = [...filteredMatches.value]
+  if (sortBy.value === 'near') {
+    return list
+      .map((m) => ({ match: m, dist: getDistance(m) ?? Number.POSITIVE_INFINITY }))
+      .sort((a, b) => a.dist - b.dist)
+      .map((item) => item.match)
+  }
+  if (sortBy.value === 'upcoming') {
+    return list.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.time ?? '').localeCompare(b.time ?? ''))
+  }
   if (sortBy.value === 'level-asc') {
     return list.sort((a, b) => (a.difficulty ?? 0) - (b.difficulty ?? 0))
   }
   if (sortBy.value === 'level-desc') {
     return list.sort((a, b) => (b.difficulty ?? 0) - (a.difficulty ?? 0))
   }
-  return list.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+  if (sortBy.value === 'level-similar') {
+    const base = 6 // nivel medio aproximado hasta tener nivel real de usuario
+    return list.sort(
+      (a, b) => Math.abs((a.difficulty ?? base) - base) - Math.abs((b.difficulty ?? base) - base)
+    )
+  }
+
+  // Recomendados: hoy + pocos cupos + cerca + fecha próxima
+  const now = Date.now()
+  return list
+    .map((m) => {
+      const slotsLeft = Math.max((m.maxPlayers ?? 0) - (m.playerIds?.length ?? 0), 0)
+      const isToday = m.date ===
+        (() => {
+          const d = new Date()
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+            d.getDate()
+          ).padStart(2, '0')}`
+        })()
+      const dist = getDistance(m) ?? 999
+      const d = m.date ? new Date(m.date).getTime() : now
+      let score = 0
+      if (isToday) score += 40
+      if (slotsLeft <= 2) score += 30
+      if (slotsLeft === 1) score += 10
+      score += Math.max(0, 20 - Math.min(dist * 3, 20)) // más puntos si está cerca
+      score += Math.max(0, 20 - Math.max(0, (d - now) / (1000 * 60 * 60 * 24))) // más puntos si es pronto
+      return { match: m, score }
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.match)
 })
 
 const joinLoadingId = ref(null)
@@ -182,7 +255,10 @@ onMounted(async () => {
             v-model="sortBy"
             class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
-            <option value="date">Fecha</option>
+            <option value="recommended">Recomendados</option>
+            <option value="near">Más cercanos</option>
+            <option value="upcoming">Próximos</option>
+            <option value="level-similar">Nivel similar</option>
             <option value="level-asc">Nivel (menor a mayor)</option>
             <option value="level-desc">Nivel (mayor a menor)</option>
           </select>
@@ -196,11 +272,54 @@ onMounted(async () => {
         </button>
       </div>
 
+      <div class="mb-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="quickToday ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+          @click="quickToday = !quickToday"
+        >
+          Hoy
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="quickNear ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+          @click="quickNear = !quickNear"
+        >
+          Cerca
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="quickF5 ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+          @click="quickF5 = !quickF5"
+        >
+          Fútbol 5
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="quickLevelMid ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+          @click="quickLevelMid = !quickLevelMid"
+        >
+          Nivel 5–7
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="quickVestuario ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+          @click="quickVestuario = !quickVestuario"
+        >
+          Con vestuario
+        </button>
+      </div>
+
       <p v-if="error" class="mb-4 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
       <div v-if="loading" class="py-12 text-center text-slate-500 dark:text-slate-400">Cargando partidos…</div>
       <div
         v-else
-        class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
+        class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 overflow-y-auto max-h-[calc(100vh-14rem)] pr-1"
       >
         <MatchCard
           v-for="m in sortedMatches"

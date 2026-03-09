@@ -13,6 +13,8 @@ const props = defineProps({
   placeholder: { type: String, default: 'Buscar dirección o hacer clic en el mapa' },
   height: { type: String, default: '320px' },
   readonly: { type: Boolean, default: false },
+  /** Oculta el buscador interno (útil cuando el padre usa LocationAutocomplete) */
+  hideSearch: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -114,7 +116,7 @@ onUnmounted(() => {
 
 <template>
   <div class="MapPicker">
-    <div v-if="!readonly" class="relative mb-2">
+    <div v-if="!readonly && !hideSearch" class="relative mb-2">
       <input
         ref="searchInput"
         type="text"
