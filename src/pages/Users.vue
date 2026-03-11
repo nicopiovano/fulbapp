@@ -11,6 +11,10 @@ import AppFooter from '@/components/AppFooter.vue'
 import PlayerAvatar from '@/components/PlayerAvatar.vue'
 import RatingStars from '@/components/RatingStars.vue'
 import UserProfileModal from '@/pages/UserProfileModal.vue'
+import CreateMatchModal from '@/pages/CreateMatchModal.vue'
+import MatchDetailModal from '@/pages/MatchDetailModal.vue'
+import LoginModal from '@/pages/LoginModal.vue'
+import MapModal from '@/pages/MapModal.vue'
 import { MessageCircle } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -110,4 +114,8 @@ onMounted(async () => {
   </div>
 
   <UserProfileModal />
+  <CreateMatchModal />
+  <MatchDetailModal />
+  <LoginModal />
+  <MapModal />
 </template>

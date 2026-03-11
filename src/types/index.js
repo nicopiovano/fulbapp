@@ -8,6 +8,14 @@
 
 /** @typedef {'habilidad'|'puntualidad'|'asistencia'|'amabilidad'|'fair_play'} RatingCategory */
 
+/** @typedef {'cemento'|'caucho'|'sintetico'} FieldSurfaceType */
+
+/** @typedef {'techado'|'descubierto'} EstablishmentCovered */
+
+/** @typedef {'buffet'|'vestuario'} EstablishmentAmenity */
+
+/** @typedef {'mixto'|'femenino'|'masculino'} MatchGender */
+
 /**
  * @typedef {Object} Coordinates
  * @property {number} lat
@@ -34,9 +42,16 @@
  * @property {string} time - HH:mm
  * @property {Coordinates} location
  * @property {string} placeName
+ * @property {string} [neighborhood] - barrio o zona (ej. Palermo, Caballito)
+ * @property {string} [address] - dirección completa (ej. Av. Libertador 1234, Palermo)
+ * @property {number} [openSlots] - cantidad de lugares a cubrir vía la app (si no viene, usar maxPlayers)
  * @property {string} [description]
  * @property {number} [price] - precio de la cancha (ej. 15000)
  * @property {number} difficulty - 1-10
+ * @property {FieldSurfaceType} [fieldSurface] - tipo de cancha: cemento, caucho, sintético
+ * @property {EstablishmentCovered} [establishmentCovered] - techado o descubierto
+ * @property {EstablishmentAmenity[]} [establishmentAmenities] - con buffet, con vestuario
+ * @property {MatchGender} [matchGender] - mixto, femenino, masculino
  * @property {string} createdBy - userId
  * @property {string} createdAt - ISO string
  */
@@ -73,3 +88,26 @@ export const RATING_CATEGORIES = /** @type {const} */ ([
   'amabilidad',
   'fair_play',
 ])
+
+export const FIELD_SURFACE_TYPES = /** @type {const} */ ({
+  cemento: { label: 'Cemento' },
+  caucho: { label: 'Caucho' },
+  sintetico: { label: 'Sintético' },
+})
+
+export const ESTABLISHMENT_COVERED = /** @type {const} */ ({
+  techado: { label: 'Techado' },
+  descubierto: { label: 'Descubierto' },
+})
+
+export const ESTABLISHMENT_AMENITIES = /** @type {const} */ ({
+  buffet: { label: "Con buffet" },
+  vestuario: { label: "Con vestuario" },
+  parrilla: { label: "Con parrilla" },
+});
+
+export const MATCH_GENDERS = /** @type {const} */ ({
+  mixto: { label: 'Mixto' },
+  femenino: { label: 'Femenino' },
+  masculino: { label: 'Masculino' },
+})

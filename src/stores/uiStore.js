@@ -16,9 +16,12 @@ export const useUIStore = defineStore('ui', () => {
   const isLoginOpen = computed(() => modal.value === 'login')
   const isMapOpen = computed(() => modal.value === 'map')
 
-  function openCreateMatch() {
+  /**
+   * @param {string} [editMatchId] - si se pasa, el modal se abre en modo edición
+   */
+  function openCreateMatch(editMatchId) {
     modal.value = 'createMatch'
-    modalPayload.value = null
+    modalPayload.value = editMatchId ? { matchId: editMatchId } : null
   }
 
   function openMatchDetail(matchId) {
