@@ -1,9 +1,13 @@
 /**
  * Cliente HTTP para la API REST del backend.
  * Maneja token Sanctum, normalización de errores y proxy de Vite en dev.
+ *
+ * API_BASE se configura vía env:
+ * - VITE_API_BASE_URL (ej: http://localhost:8000/api o https://fulbapp-api-production.up.railway.app/api)
+ * - fallback: '/api' (usa el proxy de Vite en desarrollo)
  */
 
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 const TOKEN_KEY = 'fulbapp_token'
 
 export function getToken() {

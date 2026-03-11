@@ -11,6 +11,7 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 // ─── Normalización backend → frontend ───────────────────────────────────────
 
 function normalizePlayer(raw) {
+  if (!raw) return null
   return {
     id: String(raw.id),
     name: raw.name,
@@ -22,7 +23,10 @@ function normalizePlayer(raw) {
 }
 
 function normalizeMatch(raw) {
-  const players = (raw.players ?? []).map(normalizePlayer)
+  if (!raw) {
+    throw new Error('Match vacío o inválido recibido desde la API')
+  }
+  const players = (raw.players ?? []).map(normalizePlayer).filter(Boolean)
   return {
     id: String(raw.id),
     type: raw.pitch_type,
@@ -174,16 +178,24 @@ const mockApi = {
 
 // ─── Implementación API REAL ─────────────────────────────────────────────────
 
+function unwrapMatchResponse(response) {
+  // Los endpoints de Laravel devuelven Resource/ResourceCollection:
+  // - listado: { data: [ ... ], links, meta }
+  // - detalle / create / update / join / leave / cancel: { data: { ... } }
+  return response && response.data !== undefined ? response.data : response
+}
+
 const realApi = {
   async getMatches() {
     const response = await api.get('/matches')
-    const items = response?.data ?? response
+    const items = unwrapMatchResponse(response)
     return (Array.isArray(items) ? items : []).map(normalizeMatch)
   },
 
   async getMatchById(id) {
     try {
-      const raw = await api.get(`/matches/${id}`)
+      const response = await api.get(`/matches/${id}`)
+      const raw = unwrapMatchResponse(response)
       return normalizeMatch(raw)
     } catch {
       return null
@@ -192,28 +204,33 @@ const realApi = {
 
   async createMatch(payload) {
     const body = denormalizeMatch(payload)
-    const raw = await api.post('/matches', body)
+    const response = await api.post('/matches', body)
+    const raw = unwrapMatchResponse(response)
     return normalizeMatch(raw)
   },
 
   async joinMatch(matchId) {
-    const raw = await api.post(`/matches/${matchId}/join`)
+    const response = await api.post(`/matches/${matchId}/join`)
+    const raw = unwrapMatchResponse(response)
     return normalizeMatch(raw)
   },
 
   async leaveMatch(matchId) {
-    const raw = await api.delete(`/matches/${matchId}/leave`)
+    const response = await api.delete(`/matches/${matchId}/leave`)
+    const raw = unwrapMatchResponse(response)
     return normalizeMatch(raw)
   },
 
   async cancelMatch(matchId) {
-    const raw = await api.patch(`/matches/${matchId}/cancel`)
+    const response = await api.patch(`/matches/${matchId}/cancel`)
+    const raw = unwrapMatchResponse(response)
     return normalizeMatch(raw)
   },
 
   async updateMatch(matchId, payload) {
     const body = denormalizeMatch(payload)
-    const raw = await api.put(`/matches/${matchId}`, body)
+    const response = await api.put(`/matches/${matchId}`, body)
+    const raw = unwrapMatchResponse(response)
     return normalizeMatch(raw)
   },
 }
