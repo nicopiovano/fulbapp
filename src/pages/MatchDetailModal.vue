@@ -50,6 +50,7 @@ const matchRatings = ref([]);
 const ratingScores = ref({});
 const ratingLoading = ref(false);
 const matchId = computed(() => uiStore.modalPayload?.matchId ?? null);
+const lastLoadedMatchId = ref(null);
 
 const typeLabel = computed(() =>
   match.value ? MATCH_TYPES[match.value.type]?.label : "",
@@ -80,6 +81,10 @@ const hasRated = (toUserId) =>
   matchRatings.value.some(
     (r) => r.fromUserId === userId.value && r.toUserId === toUserId,
   );
+
+const hasPendingRatings = computed(() =>
+  participantsToRate.value.some((p) => !hasRated(p.id)),
+);
 
 function getPlayerSkill(p) {
   const apiRating = playerRatings.value[p.id]?.habilidad;
@@ -113,6 +118,9 @@ const teamBPlayers = computed(() => {
 
 async function load() {
   if (!matchId.value) return;
+  if (lastLoadedMatchId.value === matchId.value && match.value) {
+    return;
+  }
   const m = await matchStore.fetchMatchById(matchId.value);
   match.value = m;
   if (m?.playerIds?.length) {
@@ -127,6 +135,7 @@ async function load() {
     playerRatings.value = {};
   }
   matchRatings.value = await ratingService.getRatingsForMatch(matchId.value);
+  lastLoadedMatchId.value = matchId.value;
 }
 
 async function handleJoin() {
@@ -210,6 +219,9 @@ async function submitRating(toUserId) {
     };
   } finally {
     ratingLoading.value = false;
+  }
+  if (!hasPendingRatings.value && match.value) {
+    match.value.hasPendingRatings = false;
   }
 }
 
@@ -410,7 +422,13 @@ const buttonState = computed(() => {
       </div>
 
       <div
-        v-if="isMatchPast && !match?.cancelled && isCreator && participantsToRate.length"
+        v-if="
+          isMatchPast &&
+          !match?.cancelled &&
+          isCreator &&
+          participantsToRate.length &&
+          hasPendingRatings
+        "
         id="calificar-jugadores"
         class="space-y-4 rounded-card border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/30"
       >

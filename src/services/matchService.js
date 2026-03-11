@@ -54,6 +54,7 @@ function normalizeMatch(raw) {
     createdBy: String(raw.created_by),
     isCreator: raw.is_creator ?? false,
     createdAt: raw.created_at,
+    hasPendingRatings: raw.has_pending_ratings ?? true,
   }
 }
 

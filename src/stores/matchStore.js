@@ -32,7 +32,6 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   async function fetchMatchById(id) {
-    loading.value = true
     error.value = null
     try {
       const match = await matchService.getMatchById(id)
@@ -45,8 +44,6 @@ export const useMatchStore = defineStore('match', () => {
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Error al cargar partido'
       return null
-    } finally {
-      loading.value = false
     }
   }
 

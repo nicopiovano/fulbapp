@@ -54,6 +54,7 @@
  * @property {MatchGender} [matchGender] - mixto, femenino, masculino
  * @property {string} createdBy - userId
  * @property {string} createdAt - ISO string
+ * @property {boolean} [hasPendingRatings] - true si el organizador aún tiene jugadores por puntuar
  */
 
 /**

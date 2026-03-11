@@ -40,6 +40,7 @@ const submitting = ref(false);
 const error = ref("");
 const triedSubmit = ref(false);
 const editingMatchId = ref(/** @type {string | null} */ (null));
+const loadingExisting = ref(false);
 
 const maxPlayers = computed(
   () => MATCH_TYPES[form.value.type]?.maxPlayers ?? 10,
@@ -253,9 +254,11 @@ watch(
     const matchId = payload?.matchId;
     if (matchId) {
       editingMatchId.value = matchId;
+      loadingExisting.value = true;
       const m = await matchStore.fetchMatchById(matchId);
       await nextTick();
       fillFormFromMatch(m);
+      loadingExisting.value = false;
     } else {
       editingMatchId.value = null;
       resetForm();
@@ -272,7 +275,13 @@ const modalTitle = computed(() =>
 
 <template>
   <BaseModal :show="show" :title="modalTitle" @close="uiStore.closeModal()">
-    <form class="p-4 space-y-4" @submit.prevent="submit">
+    <div
+      v-if="editingMatchId && loadingExisting"
+      class="p-6 py-12 text-center text-slate-500 dark:text-slate-400"
+    >
+      Cargando datos del partido…
+    </div>
+    <form v-else class="p-4 space-y-4" @submit.prevent="submit">
       <div>
         <label
           class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
